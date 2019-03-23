@@ -17,6 +17,7 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Initialize the chunk server
 	 */
 	public ChunkServer() {
+		// Add comment to see if github is working 
 		System.out.println(
 				"Constructor of ChunkServer is invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("It does nothing for now.\n");
