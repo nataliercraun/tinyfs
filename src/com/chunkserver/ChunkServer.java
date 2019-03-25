@@ -26,25 +26,6 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public ChunkServer() {
 		
-		FileInputStream fop = null; 
-		BufferedReader reader = null;
-		
-		// Need to create metadata file here 
-		String filename = "metadata"; 
-        String absoluteFilePath = filePath+filename;
-		File file = new File(absoluteFilePath);
-		try {
-			if(file.createNewFile()){
-			} else {
-				// Read counter value 
-				fop = new FileInputStream(absoluteFilePath);
-				reader = new BufferedReader(new InputStreamReader(fop));
-				String counterValue = reader.readLine();
-				System.out.println(counterValue);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		System.out.println(
 				"Constructor of ChunkServer is invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("It does nothing for now.\n");
@@ -65,7 +46,6 @@ public class ChunkServer implements ChunkServerInterface {
 			if(file.createNewFile()){
 			    System.out.println(absoluteFilePath+" File Created " + " and file path is " + absoluteFilePath);
 			    counter++; 
-			    // Need to update the counter inside of the metadata file here 
 			} else System.out.println("File "+absoluteFilePath+" already exists");
 		} catch (IOException e) {
 			e.printStackTrace();
