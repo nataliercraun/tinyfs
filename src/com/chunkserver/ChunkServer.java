@@ -3,6 +3,10 @@ package com.chunkserver;
 import com.interfaces.ChunkServerInterface;
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.RandomAccessFile;
 
 /**
  * implementation of interfaces at the chunkserver side
@@ -12,14 +16,14 @@ import java.io.IOException;
  */
 
 public class ChunkServer implements ChunkServerInterface {
-	final static String filePath = "C:\\Users\\shahram\\Documents\\TinyFS-2\\csci485Disk\\"; // or C:\\newfile.txt
+	final static String filePath = "/Users/Nataliercraun/Documents/TinyFS-2/db/"; 
 	public static long counter;
 
 	/**
 	 * Initialize the chunk server
 	 */
 	public ChunkServer() {
-		// Add comment to see if github is working 
+		// Need to create metadata file here 
 		System.out.println(
 				"Constructor of ChunkServer is invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("It does nothing for now.\n");
@@ -33,21 +37,18 @@ public class ChunkServer implements ChunkServerInterface {
 		System.out.println("createChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("Returns null for now.\n");
 		
-		
-		String fileSeparator = System.getProperty("file.separator");
-		//absolute file name with path
-        String absoluteFilePath = fileSeparator+"Users"+fileSeparator+"Nataliercraun"+fileSeparator+"Documents"+fileSeparator+"TinyFS-2"+fileSeparator+"db"+fileSeparator+"testfile_" +counter;
+		String filename = "testfile_" + counter; 
+        String absoluteFilePath = filePath+filename;
         File file = new File(absoluteFilePath);
         try {
 			if(file.createNewFile()){
-			    System.out.println(absoluteFilePath+" File Created");
+			    System.out.println(absoluteFilePath+" File Created " + " and file path is " + absoluteFilePath);
 			} else System.out.println("File "+absoluteFilePath+" already exists");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
-		return null;
+		return filename;
 	}
 
 	/**
@@ -56,7 +57,31 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public boolean putChunk(String ChunkHandle, byte[] payload, int offset) {
 		System.out.println("writeChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
-		System.out.println("Returns false for now.\n");
+		System.out.println("Returns false for now.\n " + "Payload: " + payload);
+		
+
+		String fullname = filePath + ChunkHandle; 
+		
+		RandomAccessFile raf = null; 
+		try {
+			raf = new RandomAccessFile(fullname, "rw");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	    try {
+			raf.seek(offset);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	    try {
+			raf.write(payload);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// What should I return here? 
+		
 		return false;
 	}
 
@@ -66,7 +91,33 @@ public class ChunkServer implements ChunkServerInterface {
 	public byte[] getChunk(String ChunkHandle, int offset, int NumberOfBytes) {
 		System.out.println("readChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("Returns null for now.\n");
-		return null;
+		
+		String fullname = filePath + ChunkHandle; 
+		byte[] payload = new byte[NumberOfBytes];
+		
+		RandomAccessFile raf = null; 
+		try {
+			raf = new RandomAccessFile(fullname, "rw");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    try {
+			raf.seek(offset);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	    try {
+			raf.read(payload);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		
+		
+		return payload;
 	}
 
 }
