@@ -1,6 +1,8 @@
 package com.chunkserver;
 
 import com.interfaces.ChunkServerInterface;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * implementation of interfaces at the chunkserver side
@@ -30,6 +32,21 @@ public class ChunkServer implements ChunkServerInterface {
 	public String initializeChunk() {
 		System.out.println("createChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("Returns null for now.\n");
+		
+		
+		String fileSeparator = System.getProperty("file.separator");
+		//absolute file name with path
+        String absoluteFilePath = fileSeparator+"Users"+fileSeparator+"Nataliercraun"+fileSeparator+"Documents"+fileSeparator+"TinyFS-2"+fileSeparator+"db"+fileSeparator+"testfile_" +counter;
+        File file = new File(absoluteFilePath);
+        try {
+			if(file.createNewFile()){
+			    System.out.println(absoluteFilePath+" File Created");
+			} else System.out.println("File "+absoluteFilePath+" already exists");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
 		return null;
 	}
 
