@@ -1,12 +1,14 @@
 package com.chunkserver;
 
 import com.interfaces.ChunkServerInterface;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.io.FileInputStream;
 
 /**
  * implementation of interfaces at the chunkserver side
@@ -23,7 +25,26 @@ public class ChunkServer implements ChunkServerInterface {
 	 * Initialize the chunk server
 	 */
 	public ChunkServer() {
+		
+		FileInputStream fop = null; 
+		BufferedReader reader = null;
+		
 		// Need to create metadata file here 
+		String filename = "metadata"; 
+        String absoluteFilePath = filePath+filename;
+		File file = new File(absoluteFilePath);
+		try {
+			if(file.createNewFile()){
+			} else {
+				// Read counter value 
+				fop = new FileInputStream(absoluteFilePath);
+				reader = new BufferedReader(new InputStreamReader(fop));
+				String counterValue = reader.readLine();
+				System.out.println(counterValue);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		System.out.println(
 				"Constructor of ChunkServer is invoked:  Part 1 of TinyFS must implement the body of this method.");
 		System.out.println("It does nothing for now.\n");
@@ -43,6 +64,8 @@ public class ChunkServer implements ChunkServerInterface {
         try {
 			if(file.createNewFile()){
 			    System.out.println(absoluteFilePath+" File Created " + " and file path is " + absoluteFilePath);
+			    counter++; 
+			    // Need to update the counter inside of the metadata file here 
 			} else System.out.println("File "+absoluteFilePath+" already exists");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -65,6 +88,7 @@ public class ChunkServer implements ChunkServerInterface {
 		RandomAccessFile raf = null; 
 		try {
 			raf = new RandomAccessFile(fullname, "rw");
+			System.out.println(fullname);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -74,15 +98,16 @@ public class ChunkServer implements ChunkServerInterface {
 			e.printStackTrace();
 		}
 		
-	    try {
+		try {
+	    	System.out.println(payload);
 			raf.write(payload);
+			raf.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		// What should I return here? 
 		
-		return false;
+		return true;
 	}
 
 	/**
@@ -99,20 +124,17 @@ public class ChunkServer implements ChunkServerInterface {
 		try {
 			raf = new RandomAccessFile(fullname, "rw");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	    try {
 			raf.seek(offset);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 	    try {
 			raf.read(payload);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 		
