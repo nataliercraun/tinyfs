@@ -4,6 +4,7 @@ import com.interfaces.ChunkServerInterface;
 
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,6 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 
 /**
  * implementation of interfaces at the chunkserver side
@@ -31,22 +34,28 @@ public class ChunkServer implements ChunkServerInterface {
 		String filename = "metadata"; 
         String absoluteFilePath = filePath+filename;
         File file = new File(absoluteFilePath);
-        FileInputStream fip = null; 
+		
         
         try {
 			if(file.createNewFile()){
 			   System.out.println("Creating metadata file");
 			} else {
-				 try {
-					 fip = new FileInputStream(file);
-					} catch (FileNotFoundException e1) {
-						e1.printStackTrace();
-					}
-			    int content;
-				while ((content = fip.read()) != -1) {
-					counter = content;
-				}
 				
+		        BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(file));
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				String temp = br.readLine();
+				if (temp == null) {
+					counter = 0; 
+				} else {
+					counter = Long.valueOf(temp);
+					System.out.println("COUNTER IS: " + counter);
+				}
+				 
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -60,41 +69,31 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public String initializeChunk() {
 		
-		String filename = "testfile_" + counter; 
+		String filename = "testfile_" + counter;
         String absoluteFilePath = filePath+filename;
         File file = new File(absoluteFilePath);
         
+        String metaFilename = "metadata"; 
+        String metaFilePath = filePath+metaFilename;
+        File metaFile = new File(metaFilePath);
+        
+        
         
         try {
-			if(file.createNewFile()){
+			if(file.createNewFile()) {
 			    System.out.println("COUNTER IS " + counter);
-			    // Update metadata file
+			    counter++; 
+			    
 			    try {
-					FileOutputStream fop = new FileOutputStream(file);
-					String count = String.valueOf(counter);
-					try {
-						fop.write(count.getBytes());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					try {
-						fop.flush();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					try {
-						fop.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					counter++; 
-				} catch (FileNotFoundException e1) {
+					BufferedWriter bw = new BufferedWriter(new FileWriter(metaFile));
+					bw.write(String.valueOf(counter));
+					bw.flush();
+					bw.close();
+				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
+
 			} else System.out.println("File "+absoluteFilePath+" already exists");
 		} catch (IOException e) {
 			e.printStackTrace();
