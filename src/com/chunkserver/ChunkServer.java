@@ -2,6 +2,7 @@ package com.chunkserver;
 
 import com.interfaces.ChunkServerInterface;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 /**
  * implementation of interfaces at the chunkserver side
@@ -26,9 +28,30 @@ public class ChunkServer implements ChunkServerInterface {
 	 */
 	public ChunkServer() {
 		
-		System.out.println(
-				"Constructor of ChunkServer is invoked:  Part 1 of TinyFS must implement the body of this method.");
-		System.out.println("It does nothing for now.\n");
+		String filename = "metadata"; 
+        String absoluteFilePath = filePath+filename;
+        File file = new File(absoluteFilePath);
+        FileInputStream fip = null; 
+        
+        try {
+			if(file.createNewFile()){
+			   System.out.println("Creating metadata file");
+			} else {
+				 try {
+					 fip = new FileInputStream(file);
+					} catch (FileNotFoundException e1) {
+						e1.printStackTrace();
+					}
+			    int content;
+				while ((content = fip.read()) != -1) {
+					counter = content;
+				}
+				
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
@@ -36,16 +59,42 @@ public class ChunkServer implements ChunkServerInterface {
 	 * in the file.
 	 */
 	public String initializeChunk() {
-		System.out.println("createChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
-		System.out.println("Returns null for now.\n");
 		
 		String filename = "testfile_" + counter; 
         String absoluteFilePath = filePath+filename;
         File file = new File(absoluteFilePath);
+        
+        
         try {
 			if(file.createNewFile()){
-			    System.out.println(absoluteFilePath+" File Created " + " and file path is " + absoluteFilePath);
-			    counter++; 
+			    System.out.println("COUNTER IS " + counter);
+			    // Update metadata file
+			    try {
+					FileOutputStream fop = new FileOutputStream(file);
+					String count = String.valueOf(counter);
+					try {
+						fop.write(count.getBytes());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					try {
+						fop.flush();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					try {
+						fop.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					counter++; 
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			} else System.out.println("File "+absoluteFilePath+" already exists");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -59,16 +108,12 @@ public class ChunkServer implements ChunkServerInterface {
 	 * should be no greater than 4KB
 	 */
 	public boolean putChunk(String ChunkHandle, byte[] payload, int offset) {
-		System.out.println("writeChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
-		System.out.println("Returns false for now.\n " + "Payload: " + payload);
 		
-
 		String fullname = filePath + ChunkHandle; 
 		
 		RandomAccessFile raf = null; 
 		try {
 			raf = new RandomAccessFile(fullname, "rw");
-			System.out.println(fullname);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -79,7 +124,6 @@ public class ChunkServer implements ChunkServerInterface {
 		}
 		
 		try {
-	    	System.out.println(payload);
 			raf.write(payload);
 			raf.close();
 		} catch (IOException e) {
@@ -94,8 +138,6 @@ public class ChunkServer implements ChunkServerInterface {
 	 * read the chunk at the specific offset
 	 */
 	public byte[] getChunk(String ChunkHandle, int offset, int NumberOfBytes) {
-		System.out.println("readChunk invoked:  Part 1 of TinyFS must implement the body of this method.");
-		System.out.println("Returns null for now.\n");
 		
 		String fullname = filePath + ChunkHandle; 
 		byte[] payload = new byte[NumberOfBytes];
