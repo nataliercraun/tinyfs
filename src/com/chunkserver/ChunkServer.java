@@ -8,8 +8,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -53,7 +59,6 @@ public class ChunkServer implements ChunkServerInterface {
 					counter = 0; 
 				} else {
 					counter = Long.valueOf(temp);
-					System.out.println("COUNTER IS: " + counter);
 				}
 				 
 			}
@@ -81,7 +86,6 @@ public class ChunkServer implements ChunkServerInterface {
         
         try {
 			if(file.createNewFile()) {
-			    System.out.println("COUNTER IS " + counter);
 			    counter++; 
 			    
 			    try {
@@ -161,6 +165,161 @@ public class ChunkServer implements ChunkServerInterface {
 		
 		
 		return payload;
+	}
+	
+	// Should these all be here/initialized like this??
+	
+	public static ServerSocket ss = null; 
+	public static int port = -1; 
+	public static Socket s = null; 
+	public static ObjectOutputStream oos = null;
+	public static ObjectInputStream ois = null; 
+	public static int InitializeChunk = 1;
+	public static int PutChunk = 2; 
+	public static int GetChunk = 3; 
+	
+	public static void startChunkServer() {
+		// initialize chunk server 
+		ChunkServer cs = new ChunkServer();
+		try {
+			// start a server socket binding to a port 
+			ss = new ServerSocket(port);
+			port = ss.getLocalPort();
+			System.out.println("Chunk server bound to port " + port);
+			
+			// write port to file 
+			FileWriter fw = new FileWriter(filePath);
+			PrintWriter pw = new PrintWriter(fw);
+			pw.println(Integer.toString(port));
+			pw.close();
+		} catch (IOException ioe) {
+			System.out.println("ioe in chunkserver binding to port: " + port);
+			return; 
+		}
+		
+		// keep listening on the port for new connections 
+		while (true) {
+			try {
+				// new client connects to server, create new socket for client 
+				// and server to communicate through 
+				s = ss.accept(); // blocking 
+				System.out.println("Connection from " + s.getInetAddress());
+				oos = new ObjectOutputStream(s.getOutputStream());
+				ois = new ObjectInputStream(s.getInputStream());
+				
+				// keep reading from this socket for future client requests 
+				// until client connection is closed 
+				while (!s.isClosed()) {
+					// read payload size 
+					int payloadsize = getPayloadInt(ois);
+					if (payloadsize == -1) {
+						break; 
+					}
+					// read command identifier and switch output based on command 
+					int command = getPayloadInt(ois);
+					if (command == InitializeChunk) {
+						// response 
+						String chunkHandle = cs.initializeChunk();
+						byte[] payload = chunkHandle.getBytes();
+						// write chunk handle size 
+						oos.writeInt(4 + payload.length);
+						// write chunk handle
+						oos.write(payload);
+						oos.flush();
+					} else if (command == PutChunk) {
+						// parse parameters 
+						int chunkHandleLength = getPayloadInt(ois);
+						byte[] chunkHandle = getPayload(ois, chunkHandleLength);
+						String handle = new String(chunkHandle).toString();
+						int payloadLength = getPayloadInt(ois);
+						byte[] payload = getPayload(ois, payloadLength);
+						int offset = getPayloadInt(ois);
+						// response 
+						boolean result = cs.putChunk(handle, payload, offset);
+						// write size (int)
+						oos.writeInt(4);
+						// write result as int: 0 is false, 1 is true 
+						// WHAT GOES HERE ????
+						if (result == true) {
+							oos.writeInt(1);
+						} else {
+							oos.writeInt(0);
+						}
+						oos.flush();
+					} else if (command == GetChunk) {
+						// parse parameters 
+						int chunkHandleLength = getPayloadInt(ois);
+						byte[] chunkHandle = getPayload(ois, chunkHandleLength);
+						String handle = new String(chunkHandle).toString();
+						int offset = getPayloadInt(ois);
+						int numberOfBytes = getPayloadInt(ois);
+						// response 
+						byte[] result = cs.getChunk(handle, offset, numberOfBytes);
+						// write payload size
+						// write payload 
+						if (result == null) {
+							oos.writeInt(4);
+						} else {
+							oos.writeInt(4 + result.length);
+							oos.write(result);
+						}
+						oos.flush();
+					} else {
+						System.out.println("received unparsable command");
+					}
+				}
+			} catch (IOException ioe) {
+				System.out.println("iow in chunkserver accepting client connection " + ioe.getMessage());
+			}
+		}
+	}
+	
+	public static byte[] getPayload(ObjectInputStream ois, int payloadSize) {
+		
+		byte[] payload = new byte[payloadSize];
+		byte[] temp = new byte[payloadSize];
+		int totalRead = 0;
+		
+		while (totalRead != payloadSize) {
+			int currRead = -1;
+			
+			try {
+				// read bytes from stream into byte array and add byte by byte to 
+				// final byte array 
+				currRead = ois.read(temp, 0, (payloadSize - totalRead));
+				for (int i = 0; i < currRead; i++) {
+					payload[totalRead +   i] = temp[i];
+				}
+				
+			} catch (IOException ioe) {
+				System.out.println("ioe in reading payload" + ioe.getMessage());
+				try {
+					s.close();
+					System.out.println("closed client socket connection");
+				} catch (IOException e) {
+					System.out.println("iow in closing client socket connection " + e.getMessage());
+				}
+				return null; 
+			}
+			if (currRead == -1) {
+				System.out.println("error in reading payload");
+				return null; 
+			} else {
+				totalRead += currRead; 
+			}
+		}
+		
+		return payload; 
+	}
+	
+	public static int getPayloadInt(ObjectInputStream ois) {
+		// read payload size from stream and return as int; return -2 if error 
+		int payloadSize = -1; 
+		byte[] payload = getPayload(ois, 4); // 4 is size of int 
+		if (payload != null) {
+			payloadSize = ByteBuffer.wrap(payload).getInt();
+		}
+		return payloadSize; 
 	}
 
 }
