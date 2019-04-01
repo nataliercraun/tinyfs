@@ -34,11 +34,11 @@ public class ChunkServer implements ChunkServerInterface {
 	
 	// Should these all be here/initialized like this??
 	
-	public static ServerSocket ss = null; 
+	public static ServerSocket ss; 
 	public static int port = 4000; 
-	public static Socket s = null; 
-	public static ObjectOutputStream oos = null;
-	public static ObjectInputStream ois = null; 
+	public static Socket s; 
+	public static ObjectOutputStream oos;
+	public static ObjectInputStream ois; 
 	public static int InitializeChunk = 1;
 	public static int PutChunk = 2; 
 	public static int GetChunk = 3; 
@@ -199,15 +199,19 @@ public class ChunkServer implements ChunkServerInterface {
 			return; 
 		}
 		
+		
 		// keep listening on the port for new connections 
 		while (true) {
 			try {
 				// new client connects to server, create new socket for client 
 				// and server to communicate through 
+				System.out.println("Waiting for client...");
 				s = ss.accept(); // blocking 
 				System.out.println("Connection from " + s.getInetAddress());
 				oos = new ObjectOutputStream(s.getOutputStream());
 				ois = new ObjectInputStream(s.getInputStream());
+				
+				System.out.println("Made it here");
 				
 				// keep reading from this socket for future client requests 
 				// until client connection is closed 
@@ -321,6 +325,11 @@ public class ChunkServer implements ChunkServerInterface {
 			payloadSize = ByteBuffer.wrap(payload).getInt();
 		}
 		return payloadSize; 
+	}
+	
+	public static void main(String [] args)
+	{
+		startChunkServer();
 	}
 
 }

@@ -1,6 +1,9 @@
 package com.client;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -21,16 +24,17 @@ import com.interfaces.ClientInterface;
  *
  */
 public class Client implements ClientInterface {
+	final static String filePath = "/Users/Nataliercraun/Documents/TinyFS-2/db/"; 
 	public static ChunkServer cs = new ChunkServer();
 	
 	// Should all of these be here??
 	
-	public static ObjectOutputStream oos = null;
-	public static ObjectInputStream ois = null; 
-	public static ServerSocket ss = null; 
+	public static ObjectOutputStream oos;
+	public static ObjectInputStream ois; 
+	public static ServerSocket ss; 
 	public static int  port = -1; 
-	public static InetAddress address = null;
-	public static Socket s = null; 
+	public static InetAddress address;
+	public static Socket s; 
 	
 
 	/**
@@ -40,16 +44,30 @@ public class Client implements ClientInterface {
 		if (cs == null)
 			cs = new ChunkServer();
 		
+		String filename = "metadata"; 
+        String absoluteFilePath = filePath+filename;
+        File file = new File(absoluteFilePath);
+		
 		try {
-			// Do we start the chunkserver here?
-			cs.startChunkServer();
 			
-			port = cs.ss.getLocalPort();
-			address = cs.s.getInetAddress();
-			
+			 BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(file));
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				String temp = br.readLine();
+				if (temp == null) {
+					port = 0; 
+				} else {
+					port = Integer.valueOf(temp);
+					System.out.println("port: " + port);
+				}
 			
 			// Is this the correct hostname
-			s = new Socket(address, port);
+			s = new Socket("localhost", port);
+			System.out.println("Connected");
 			
 			PrintWriter out = new PrintWriter(s.getOutputStream());
 			BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -58,6 +76,7 @@ public class Client implements ClientInterface {
 			System.out.println("Problem connecting client");
 		}
 	}
+	
 
 	/**
 	 * Create a chunk at the chunk server from the client side.
