@@ -1,8 +1,12 @@
 package com.client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -19,11 +23,15 @@ import com.interfaces.ClientInterface;
 public class Client implements ClientInterface {
 	public static ChunkServer cs = new ChunkServer();
 	
+	// Should all of these be here??
+	
 	public static ObjectOutputStream oos = null;
 	public static ObjectInputStream ois = null; 
 	public static ServerSocket ss = null; 
-	public static int port = -1; 
+	public static int  port = -1; 
+	public static InetAddress address = null;
 	public static Socket s = null; 
+	
 
 	/**
 	 * Initialize the client
@@ -31,6 +39,24 @@ public class Client implements ClientInterface {
 	public Client() {
 		if (cs == null)
 			cs = new ChunkServer();
+		
+		try {
+			// Do we start the chunkserver here?
+			cs.startChunkServer();
+			
+			port = cs.ss.getLocalPort();
+			address = cs.s.getInetAddress();
+			
+			
+			// Is this the correct hostname
+			s = new Socket(address, port);
+			
+			PrintWriter out = new PrintWriter(s.getOutputStream());
+			BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+			
+		} catch (IOException ioe) {
+			System.out.println("Problem connecting client");
+		}
 	}
 
 	/**

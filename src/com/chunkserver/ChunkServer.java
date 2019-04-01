@@ -35,7 +35,7 @@ public class ChunkServer implements ChunkServerInterface {
 	// Should these all be here/initialized like this??
 	
 	public static ServerSocket ss = null; 
-	public static int port = -1; 
+	public static int port = 4000; 
 	public static Socket s = null; 
 	public static ObjectOutputStream oos = null;
 	public static ObjectInputStream ois = null; 
@@ -186,8 +186,11 @@ public class ChunkServer implements ChunkServerInterface {
 			port = ss.getLocalPort();
 			System.out.println("Chunk server bound to port " + port);
 			
-			// write port to file 
-			FileWriter fw = new FileWriter(filePath);
+			// write port to metadata file 
+			String filename = "metadata"; 
+	        String absoluteFilePath = filePath+filename;
+	        File file = new File(absoluteFilePath);
+			FileWriter fw = new FileWriter(absoluteFilePath);
 			PrintWriter pw = new PrintWriter(fw);
 			pw.println(Integer.toString(port));
 			pw.close();
