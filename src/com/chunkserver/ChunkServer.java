@@ -31,6 +31,17 @@ import java.io.FileWriter;
 public class ChunkServer implements ChunkServerInterface {
 	final static String filePath = "/Users/Nataliercraun/Documents/TinyFS-2/db/"; 
 	public static long counter;
+	
+	// Should these all be here/initialized like this??
+	
+	public static ServerSocket ss = null; 
+	public static int port = -1; 
+	public static Socket s = null; 
+	public static ObjectOutputStream oos = null;
+	public static ObjectInputStream ois = null; 
+	public static int InitializeChunk = 1;
+	public static int PutChunk = 2; 
+	public static int GetChunk = 3; 
 
 	/**
 	 * Initialize the chunk server
@@ -81,8 +92,6 @@ public class ChunkServer implements ChunkServerInterface {
         String metaFilename = "metadata"; 
         String metaFilePath = filePath+metaFilename;
         File metaFile = new File(metaFilePath);
-        
-        
         
         try {
 			if(file.createNewFile()) {
@@ -167,16 +176,6 @@ public class ChunkServer implements ChunkServerInterface {
 		return payload;
 	}
 	
-	// Should these all be here/initialized like this??
-	
-	public static ServerSocket ss = null; 
-	public static int port = -1; 
-	public static Socket s = null; 
-	public static ObjectOutputStream oos = null;
-	public static ObjectInputStream ois = null; 
-	public static int InitializeChunk = 1;
-	public static int PutChunk = 2; 
-	public static int GetChunk = 3; 
 	
 	public static void startChunkServer() {
 		// initialize chunk server 
@@ -239,11 +238,10 @@ public class ChunkServer implements ChunkServerInterface {
 						// write size (int)
 						oos.writeInt(4);
 						// write result as int: 0 is false, 1 is true 
-						// WHAT GOES HERE ????
-						if (result == true) {
-							oos.writeInt(1);
-						} else {
+						if (result == false) {
 							oos.writeInt(0);
+						} else {
+							oos.writeInt(1);
 						}
 						oos.flush();
 					} else if (command == GetChunk) {
