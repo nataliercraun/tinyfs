@@ -67,6 +67,8 @@ public class Client implements ClientInterface {
 			
 			// Is this the correct hostname
 			s = new Socket("localhost", port);
+			oos = new ObjectOutputStream(s.getOutputStream());
+			ois = new ObjectInputStream(s.getInputStream());
 			System.out.println("Connected");
 			
 			PrintWriter out = new PrintWriter(s.getOutputStream());
