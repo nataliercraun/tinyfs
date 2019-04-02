@@ -187,9 +187,18 @@ public class ChunkServer implements ChunkServerInterface {
 			System.out.println("Chunk server bound to port " + port);
 			
 			// write port to metadata file 
-			String filename = "metadata"; 
+			String filename = "portnum"; 
 	        String absoluteFilePath = filePath+filename;
 	        File file = new File(absoluteFilePath);
+	        
+	        try {
+				if(file.createNewFile()){
+				   System.out.println("Creating port number file");
+				} 
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+	        
 			FileWriter fw = new FileWriter(absoluteFilePath);
 			PrintWriter pw = new PrintWriter(fw);
 			pw.println(Integer.toString(port));
@@ -210,9 +219,7 @@ public class ChunkServer implements ChunkServerInterface {
 				System.out.println("Connection from " + s.getInetAddress());
 				oos = new ObjectOutputStream(s.getOutputStream());
 				ois = new ObjectInputStream(s.getInputStream());
-				
-				System.out.println("Made it here");
-				
+								
 				// keep reading from this socket for future client requests 
 				// until client connection is closed 
 				while (!s.isClosed()) {
@@ -233,6 +240,7 @@ public class ChunkServer implements ChunkServerInterface {
 						oos.write(payload);
 						oos.flush();
 					} else if (command == PutChunk) {
+						System.out.println("Command is PUT chunk");
 						// parse parameters 
 						int chunkHandleLength = getPayloadInt(ois);
 						byte[] chunkHandle = getPayload(ois, chunkHandleLength);
@@ -270,7 +278,7 @@ public class ChunkServer implements ChunkServerInterface {
 						}
 						oos.flush();
 					} else {
-						System.out.println("received unparsable command");
+						System.out.println("received unparsable command: " + command);
 					}
 				}
 			} catch (IOException ioe) {
@@ -297,7 +305,7 @@ public class ChunkServer implements ChunkServerInterface {
 				}
 				
 			} catch (IOException ioe) {
-				System.out.println("ioe in reading payload" + ioe.getMessage());
+				System.out.println("ioe in reading payload s" + ioe.getMessage());
 				try {
 					s.close();
 					System.out.println("closed client socket connection");

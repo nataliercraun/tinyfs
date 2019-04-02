@@ -44,7 +44,7 @@ public class Client implements ClientInterface {
 		if (cs == null)
 			cs = new ChunkServer();
 		
-		String filename = "metadata"; 
+		String filename = "portnum"; 
         String absoluteFilePath = filePath+filename;
         File file = new File(absoluteFilePath);
 		
@@ -62,17 +62,18 @@ public class Client implements ClientInterface {
 					port = 0; 
 				} else {
 					port = Integer.valueOf(temp);
-					System.out.println("port: " + port);
+					System.out.println("Client attempting to connect to port: " + port);
 				}
 			
 			// Is this the correct hostname
-			s = new Socket("localhost", port);
+			if (s == null) {
+				s = new Socket("localhost", port);
+			} 
+			
 			oos = new ObjectOutputStream(s.getOutputStream());
 			ois = new ObjectInputStream(s.getInputStream());
 			System.out.println("Connected");
 			
-			PrintWriter out = new PrintWriter(s.getOutputStream());
-			BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 			
 		} catch (IOException ioe) {
 			System.out.println("Problem connecting client");
@@ -117,15 +118,15 @@ public class Client implements ClientInterface {
 			// request 
 			byte[] handle = ChunkHandle.getBytes();
 			// write payload size 
-			oos.writeInt(4 + 4 + 4 + handle.length + 4 + payload.length + 4);
+			oos.writeInt(4 + 4 + 4 + 4 + 4 + handle.length + payload.length);
 			// write command identifier 
 			oos.writeInt(ChunkServer.PutChunk);
 			// write chunkHandle size 
 			oos.writeInt(handle.length);
 			// write chunk handle
 			oos.write(handle);
-			// write payload size 
-			oos.write(payload.length);
+			// write payload size s
+			oos.writeInt(payload.length);
 			// write payload 
 			oos.write(payload);
 			// write offset
@@ -138,6 +139,7 @@ public class Client implements ClientInterface {
 			if (result == 0) {
 				return false; 
 			} else {
+				System.out.println("success put chunk");
 				return true; 
 			}
 			
@@ -159,16 +161,21 @@ public class Client implements ClientInterface {
 			// request 
 			byte[] handle = ChunkHandle.getBytes();
 			// write payload size (4-command + 4-handle-length + actual handle)
-			oos.writeInt(4 + 4 + handle.length);
+			oos.writeInt(4 + 4 + 4 + 4 + handle.length);
 			// write command identifier 
 			oos.writeInt(ChunkServer.GetChunk);
-			// write chunkHandle size 
+			// write chunkHandle length 
 			oos.writeInt(handle.length);
 			// write chunk handle
 			oos.write(handle);
+			// write offset 
+			oos.write(offset);
+			// write number of bytes
+			oos.write(NumberOfBytes);
 			oos.flush();
 			// parse response 
 			int payloadSize = getPayloadInt(ois);
+			System.out.print("payload size: " + payloadSize);
 			payload = getPayload(ois, payloadSize);
 			
 			return payload; 
