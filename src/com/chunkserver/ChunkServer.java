@@ -240,7 +240,6 @@ public class ChunkServer implements ChunkServerInterface {
 						oos.write(payload);
 						oos.flush();
 					} else if (command == PutChunk) {
-						System.out.println("Command is PUT chunk");
 						// parse parameters 
 						int chunkHandleLength = getPayloadInt(ois);
 						byte[] chunkHandle = getPayload(ois, chunkHandleLength);
@@ -260,6 +259,7 @@ public class ChunkServer implements ChunkServerInterface {
 						}
 						oos.flush();
 					} else if (command == GetChunk) {
+						System.out.println("getting chunk");
 						// parse parameters 
 						int chunkHandleLength = getPayloadInt(ois);
 						byte[] chunkHandle = getPayload(ois, chunkHandleLength);
@@ -273,7 +273,8 @@ public class ChunkServer implements ChunkServerInterface {
 						if (result == null) {
 							oos.writeInt(4);
 						} else {
-							oos.writeInt(4 + result.length);
+							System.out.println("Sending this size: " + (4 + result.length));
+							oos.writeInt(result.length);
 							oos.write(result);
 						}
 						oos.flush();
@@ -305,7 +306,7 @@ public class ChunkServer implements ChunkServerInterface {
 				}
 				
 			} catch (IOException ioe) {
-				System.out.println("ioe in reading payload s" + ioe.getMessage());
+				System.out.println("ioe in reading payload " + ioe.getMessage());
 				try {
 					s.close();
 					System.out.println("closed client socket connection");

@@ -68,10 +68,11 @@ public class Client implements ClientInterface {
 			// Is this the correct hostname
 			if (s == null) {
 				s = new Socket("localhost", port);
+				oos = new ObjectOutputStream(s.getOutputStream());
+				ois = new ObjectInputStream(s.getInputStream());
 			} 
 			
-			oos = new ObjectOutputStream(s.getOutputStream());
-			ois = new ObjectInputStream(s.getInputStream());
+			
 			System.out.println("Connected");
 			
 			
@@ -155,7 +156,7 @@ public class Client implements ClientInterface {
 	 */
 	public byte[] getChunk(String ChunkHandle, int offset, int NumberOfBytes) {
 		
-		byte[] payload = null; 
+		byte[] payload = null;
 		
 		try {
 			// request 
@@ -169,14 +170,15 @@ public class Client implements ClientInterface {
 			// write chunk handle
 			oos.write(handle);
 			// write offset 
-			oos.write(offset);
+			oos.writeInt(offset);
 			// write number of bytes
-			oos.write(NumberOfBytes);
+			oos.writeInt(NumberOfBytes);
 			oos.flush();
 			// parse response 
 			int payloadSize = getPayloadInt(ois);
-			System.out.print("payload size: " + payloadSize);
+			System.out.println("Recieving this size: " + payloadSize);
 			payload = getPayload(ois, payloadSize);
+			System.out.print("received payload in client");
 			
 			return payload; 
 			
@@ -184,7 +186,8 @@ public class Client implements ClientInterface {
 			System.out.println(ioe.getMessage());
 		}
 		
-		return new byte[0]; 
+		return payload; 
+		
 	}
 	
 	public static int getPayloadInt(ObjectInputStream ois) {
@@ -220,7 +223,7 @@ public class Client implements ClientInterface {
 						s.close();
 						System.out.println("closed client socket connection");
 					} catch (IOException e) {
-						System.out.println("iow in closing client socket connection " + e.getMessage());
+						System.out.println("ioe in closing client socket connection " + e.getMessage());
 					}
 					return null; 
 				}
@@ -230,8 +233,9 @@ public class Client implements ClientInterface {
 				} else {
 					totalRead += currRead; 
 				}
+				System.out.println("total Read: " + totalRead);
+				System.out.println("payloadsize: " + payloadSize);
 			}
-			
 			return payload; 
 		}
 
